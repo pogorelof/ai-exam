@@ -14,3 +14,7 @@ class UserPublic(BaseModel):
     id: int
     username: str    
     role: str    
+
+    model_config = {
+        "from_attributes": True
+    }
