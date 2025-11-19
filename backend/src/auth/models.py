@@ -1,4 +1,5 @@
 from sqlalchemy import Column, Integer, String, Enum
+from sqlalchemy.orm import relationship
 
 from src.auth.schemas import RoleEnum
 from src.db import Base
@@ -9,5 +10,7 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String)
     hashed_password = Column(String)
-    # student/teacher
-    role = Column(Enum(RoleEnum), nullable=False)
+    role = Column(Enum(RoleEnum), nullable=False) # student/teacher
+    
+    classes = relationship("Class", back_populates="owner")
+    

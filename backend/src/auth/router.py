@@ -22,7 +22,7 @@ def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
     user = session.query(User).filter(User.username == form_data.username).first()
     if not user:
         raise HTTPException(status_code=403, detail="Username not found")
-    if not password_hash.verify(form_data.password, user.hashed_password):
+    if not password_hash.verify(form_data.password, str(user.hashed_password)):
         raise HTTPException(status_code=403, detail="Invalid credentials")
     payload = {
         "sub": str(user.id)
