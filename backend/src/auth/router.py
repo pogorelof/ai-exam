@@ -8,7 +8,7 @@ import logging
 
 from src.auth.jwt import create_access_token
 from src.auth.models import User
-from src.auth.schemas import AccessToken
+from src.auth.schemas import AccessToken, RoleEnum
 from src.db import SessionDep
 
 
@@ -33,12 +33,14 @@ def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
 @router.post("/register")
 def register(
     session: SessionDep,
-    username: str = Form(),
-    password: str = Form()
+    username: str = Form(...),
+    password: str = Form(...),
+    role: RoleEnum = Form(...)
 ):
     hashed_password = password_hash.hash(password)
     user_to_db = User(username=username, 
-                      hashed_password=hashed_password)
+                      hashed_password=hashed_password,
+                      role=role)
     
     log.info(f"Try to register '{username}'.")
 
