@@ -23,7 +23,8 @@ def login(form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
     if not password_hash.verify(form_data.password, str(user.hashed_password)):
         raise HTTPException(status_code=403, detail="Invalid credentials")
     payload = {
-        "sub": str(user.id)
+        "sub": str(user.id),
+        "role": user.role
     }
     return create_access_token(payload)
 

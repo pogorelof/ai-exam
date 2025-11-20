@@ -14,6 +14,10 @@ class ClassPublic(ClassBase):
         "from_attributes": True
     }
 
+class ClassDetail(ClassPublic):
+    owner: UserPublic
+    members: list[UserPublic]
+
 class RequestPublic(BaseModel):
     student: UserPublic
     class_obj: ClassPublic

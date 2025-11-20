@@ -11,7 +11,7 @@ from src.auth.schemas import AccessToken
 from src.db import SessionDep
 
 SECRET_KEY = "5f51f0a843728c24a0f88406e6b66b82ffc5a86bef5247ccfd4d1909b13bc63a"
-EXPIRES_TIME_MINUTE = 60
+EXPIRES_TIME_MINUTE = 86400
 ALHORITHM = "HS256"
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/token")

@@ -8,7 +8,7 @@ from src.auth.schemas import RoleEnum, UserPublic
 from src.classes.models import Class, request_to_class, members_of_class
 from src.db import SessionDep, create_entity_in_db
 from src.auth.jwt import CurrentUserDep
-from src.classes.schemas import ClassBase, ClassPublic, RequestPublic, MembersShow, ResponseToRequestEnum
+from src.classes.schemas import ClassBase, ClassDetail, ClassPublic, RequestPublic, MembersShow, ResponseToRequestEnum
 
 
 router = APIRouter(prefix="/class", tags=["class"])
@@ -134,6 +134,18 @@ def get_members_of_class(class_id: int, session: SessionDep):
     return MembersShow(type="members",
                        class_obj=session.get(Class, class_id), 
                        students=students)
+
+@router.get("/{class_id}", response_model=ClassDetail)
+def get_class_by_id(class_id: int, session: SessionDep):
+    class_obj = session.get(Class, class_id)
+    get_members_stmt = select(members_of_class.c.student_id).where(members_of_class.c.class_id==class_id)
+    students_ids = [row.student_id for row in session.execute(get_members_stmt)]
+    class_obj.members = session.query(User).where(User.id.in_(students_ids)).all()
+    return class_obj
+
+@router.get("/search/{req}")
+def search_class(req: str):
+    pass
 
 #TODO: leave from class(student)
 #TODO: kick from class(teacher)
