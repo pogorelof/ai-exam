@@ -11,7 +11,7 @@ from src.auth.schemas import AccessToken, RoleEnum, UserRegister
 from src.db import SessionDep
 
 
-router = APIRouter(prefix="/auth")
+router = APIRouter(prefix="/auth", tags=["auth"])
 password_hash = PasswordHash.recommended()
 
 @router.post("/token", response_model=AccessToken)

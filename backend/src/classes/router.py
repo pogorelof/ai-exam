@@ -11,7 +11,7 @@ from src.auth.jwt import CurrentUserDep
 from src.classes.schemas import ClassBase, ClassPublic, RequestPublic, MembersShow, ResponseToRequestEnum
 
 
-router = APIRouter(prefix="/class")
+router = APIRouter(prefix="/class", tags=["class"])
 
 # Classes CRUD (Only Teacher)
 @router.post("/create")
