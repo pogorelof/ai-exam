@@ -10,6 +10,9 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String)
     hashed_password = Column(String)
+    first_name = Column(String)
+    last_name = Column(String)
+    email = Column(String)
     role = Column(Enum(RoleEnum), nullable=False) # student/teacher
     
     classes = relationship("Class", back_populates="owner")

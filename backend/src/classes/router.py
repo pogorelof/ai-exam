@@ -47,9 +47,16 @@ def update(class_id: int, class_upd: ClassBase, current_user: CurrentUserDep, se
     create_entity_in_db(class_from_db, session)
     return class_from_db
 
-@router.get("/", summary="Get all classes of authorized teacher", response_model=list[ClassPublic])
+@router.get("/", summary="Get all classes of authorized teacher or student. Depends the role.", response_model=list[ClassPublic])
 def get_all_classes(current_user: CurrentUserDep, session: SessionDep):
-    return current_user.classes
+    if current_user.role == RoleEnum.teacher:
+        return current_user.classes
+    else:
+        get_student_classes_stmt = select(members_of_class.c.class_id).where(members_of_class.c.student_id==current_user.id)
+        classes_ids = [row.class_id for row in session.execute(get_student_classes_stmt)]
+        classes = session.query(Class).where(Class.id.in_(classes_ids)).all()
+        return classes
+        
 
 # Members of classes
 @router.post("/request/{class_id}", response_model=RequestPublic)
@@ -126,4 +133,7 @@ def get_members_of_class(class_id: int, session: SessionDep):
     students = session.query(User).where(User.id.in_(students_ids)).all()
     return MembersShow(type="members",
                        class_obj=session.get(Class, class_id), 
-                   j    students=students)
+                       students=students)
+
+#TODO: leave from class(student)
+#TODO: kick from class(teacher)
