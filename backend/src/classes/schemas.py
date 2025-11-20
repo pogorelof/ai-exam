@@ -1,3 +1,4 @@
+from enum import Enum
 from pydantic import BaseModel
 
 from src.auth.schemas import UserPublic
@@ -18,6 +19,11 @@ class RequestPublic(BaseModel):
     class_obj: ClassPublic
     status: str
 
-class RequestShow(BaseModel):
+class MembersShow(BaseModel):
+    type: str
     class_obj: ClassPublic
     students: list[UserPublic]
+
+class ResponseToRequestEnum(str, Enum):
+    accept = "accept"
+    reject = "reject"

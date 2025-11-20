@@ -23,3 +23,11 @@ request_to_class = Table(
     Column("student_id", ForeignKey("user.id"), primary_key=True),
     Column("class_id", ForeignKey("class.id"), primary_key=True)
 )
+
+# Associate table with members of class
+members_of_class = Table(
+    "members_of_class",
+    Base.metadata,
+    Column("student_id", ForeignKey("user.id"), primary_key=True),
+    Column("class_id", ForeignKey("class.id"), primary_key=True)
+)
