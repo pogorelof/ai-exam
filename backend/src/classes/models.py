@@ -11,6 +11,7 @@ class Class(Base):
     teacher_id = Column(Integer, ForeignKey("user.id"))
     
     owner = relationship("User", back_populates="classes")
+    themes = relationship("Theme", back_populates="class_obj")
 
     __table_args__ = (
         UniqueConstraint("teacher_id", "title", name="uq_teacher_title"),

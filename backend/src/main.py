@@ -3,8 +3,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from src.db import init_tables
 from src.auth.jwt import CurrentUserDep
 from src.auth.schemas import UserPublic
+
 from src.auth import router as auth_router
 from src.classes import router as class_router
+from src.questions import router as question_router
 
 app = FastAPI()
 
@@ -20,6 +22,7 @@ init_tables()
 
 app.include_router(auth_router.router)
 app.include_router(class_router.router)
+app.include_router(question_router.router)
 
 @app.get("/me", response_model=UserPublic)
 def me(current_user: CurrentUserDep):
