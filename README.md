@@ -50,3 +50,14 @@
 Сервер будет доступен по адресу: [http://localhost:8000](http://localhost:8000)
 
 Документация API (Swagger) доступна по адресу: [http://localhost:8000/docs](http://localhost:8000/docs)
+
+## Установка Прокси при необходимости
+1. Создать файл ```.env``` в папке ```backend```
+2. Указать ```PROXY_URL``` в виде 
+```
+PROXY_URL=http://host:port
+```
+или
+```
+PROXY_URL=http://user:pass@host:port
+```
