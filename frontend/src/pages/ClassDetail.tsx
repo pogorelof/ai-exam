@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import api from '../api';
+import TokenPopup from '../components/TokenPopup';
 
 interface User {
   id: number;
@@ -10,14 +11,19 @@ interface User {
   full_name: string;
 }
 
-interface ClassDetail {
-  title: string;
-  id: number;
-  owner: User;
-  members: User[];
-}
-
-interface RequestResponse {
+  interface ClassDetail {
+    title: string;
+    id: number;
+    owner: User;
+    members: User[];
+  }
+  
+  interface TestItem {
+    name: string;
+    id: number;
+  }
+  
+  interface RequestResponse {
   type: string;
   class_obj: {
     title: string;
@@ -32,6 +38,7 @@ const ClassDetail: React.FC = () => {
   const [classData, setClassData] = useState<ClassDetail | null>(null);
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [requests, setRequests] = useState<User[]>([]);
+  const [tests, setTests] = useState<TestItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [joinStatus, setJoinStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
@@ -40,6 +47,8 @@ const ClassDetail: React.FC = () => {
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [deleteConfirmation, setDeleteConfirmation] = useState('');
   const [deleteStatus, setDeleteStatus] = useState<'idle' | 'loading'>('idle');
+  
+  const [isTokenPopupOpen, setIsTokenPopupOpen] = useState(false);
 
   const fetchClassDetail = async () => {
     try {
@@ -51,6 +60,14 @@ const ClassDetail: React.FC = () => {
       // Fetch class data
       const response = await api.get(`/class/${id}`);
       setClassData(response.data);
+
+      // Fetch tests list
+      try {
+        const testsResponse = await api.get(`/question/class/${id}`);
+        setTests(testsResponse.data);
+      } catch (testErr) {
+        console.error('Error fetching tests:', testErr);
+      }
 
       // If user is owner (teacher), fetch requests
       if (user.role === 'teacher' && response.data.owner.id === user.id) {
@@ -142,6 +159,29 @@ const ClassDetail: React.FC = () => {
       <header className="dashboard-header">
         <Link to="/" className="brand-title">AI Exam</Link>
         <div className="user-info">
+          {/* Token Button (Only for Teacher) */}
+          {isOwner && (
+            <div style={{ position: 'relative', display: 'inline-block' }}>
+              <button 
+                onClick={() => setIsTokenPopupOpen(!isTokenPopupOpen)}
+                style={{ 
+                  marginRight: '15px',
+                  backgroundColor: 'transparent',
+                  border: '1px solid var(--primary-color)',
+                  color: 'var(--primary-color)',
+                  padding: '5px 10px',
+                  cursor: 'pointer',
+                  fontWeight: 500
+                }}
+              >
+                Токен OpenAI
+              </button>
+              {isTokenPopupOpen && (
+                <TokenPopup onClose={() => setIsTokenPopupOpen(false)} />
+              )}
+            </div>
+          )}
+          
           {currentUser && <span className="user-name">{currentUser.full_name}</span>}
           <button onClick={handleLogout}>Выход</button>
         </div>
@@ -266,30 +306,89 @@ const ClassDetail: React.FC = () => {
             <div style={{ 
               width: '100%', 
               maxWidth: '800px', 
-              background: 'white', 
-              padding: '2rem', 
-              borderRadius: '8px', 
-              boxShadow: '0 1px 3px rgba(0,0,0,0.05)',
-              minHeight: '300px',
+              maxHeight: 'calc(100vh - 250px)',
               display: 'flex',
-              justifyContent: 'center',
-              alignItems: 'center',
-              color: '#999',
-              border: '2px dashed #eee',
-              flexDirection: 'column'
+              flexDirection: 'column',
             }}>
-              Контент класса будет здесь
+              <div style={{ 
+                flex: 1, 
+                overflowY: 'auto', 
+                display: 'flex', 
+                flexDirection: 'column', 
+                gap: '15px', 
+                width: '100%',
+                padding: '5px', // Add padding for scrollbar space and box shadow visibility
+                marginBottom: '20px' // Space before buttons
+              }}>
+                {tests.length > 0 ? (
+                  tests.map((test) => (
+                    <button
+                      key={test.id}
+                      onClick={() => navigate(`/test/${test.id}`)}
+                      style={{
+                        width: '100%',
+                        padding: '20px',
+                        backgroundColor: 'white',
+                        border: '1px solid #e0e0e0',
+                        borderRadius: '10px',
+                        cursor: 'pointer',
+                        textAlign: 'left',
+                        boxShadow: '0 2px 5px rgba(0,0,0,0.05)',
+                        transition: 'transform 0.2s, box-shadow 0.2s',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        justifyContent: 'center',
+                        minHeight: '80px'
+                      }}
+                      onMouseOver={(e) => {
+                        e.currentTarget.style.transform = 'translateY(-3px)';
+                        e.currentTarget.style.boxShadow = '0 5px 15px rgba(0,0,0,0.1)';
+                      }}
+                      onMouseOut={(e) => {
+                        e.currentTarget.style.transform = 'none';
+                        e.currentTarget.style.boxShadow = '0 2px 5px rgba(0,0,0,0.05)';
+                      }}
+                    >
+                      <span style={{ fontSize: '1.1rem', fontWeight: 'bold', color: '#333', marginBottom: '5px' }}>
+                        {test.name}
+                      </span>
+                    </button>
+                  ))
+                ) : (
+                  <div style={{ gridColumn: '1/-1', textAlign: 'center', color: '#777', padding: '2rem', background: 'white', borderRadius: '8px' }}>
+                    Список тестов пуст
+                  </div>
+                )}
+              </div>
               
-              {/* Delete Class Button (Only for Owner) - Inside content area or below */}
+              {/* Teacher controls: Create Question & Delete Class */}
               {isOwner && (
-                <div style={{ marginTop: 'auto', paddingTop: '20px' }}>
+                <div style={{ marginTop: 'auto', paddingTop: '20px', width: '100%', display: 'flex', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
+                   <button 
+                    onClick={() => navigate(`/class/${id}/create-question`)}
+                    style={{ 
+                      backgroundColor: 'var(--primary-color)',
+                      color: 'white', 
+                      fontSize: '0.9rem',
+                      padding: '10px 20px',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer'
+                    }}
+                  >
+                    Создать вопросы
+                  </button>
+                  
                    <button 
                     onClick={() => setIsDeleteModalOpen(true)}
                     style={{ 
-                      backgroundColor: '#d32f2f', 
-                      marginTop: '20px',
+                      backgroundColor: '#d32f2f',
+                      color: 'white', 
                       fontSize: '0.9rem',
-                      padding: '8px 16px'
+                      padding: '10px 20px',
+                      border: 'none',
+                      borderRadius: '4px',
+                      cursor: 'pointer'
                     }}
                   >
                     Удалить класс

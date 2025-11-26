@@ -1,12 +1,14 @@
 from fastapi import APIRouter, HTTPException
+from openai import OpenAI
 from sqlalchemy import select
 
+from src.ai.service import create_test_questions
 from src.classes.models import Class, members_of_class
 from src.questions.models import TestOptions, TestQuestion, Theme
 from src.auth.schemas import RoleEnum
 from src.auth.jwt import CurrentUserDep
 from src.db import SessionDep
-from src.questions.schemas import TestQuestionOptionReturn, ThemeCreate, TestQuestionReturn, TestQuestionOptionReturn, ThemeReturn
+from src.questions.schemas import ThemeCreate, TestQuestionReturn, TestQuestionOptionReturn, ThemeReturn
 
 
 router = APIRouter(prefix="/question", tags=["Question"])
@@ -33,28 +35,26 @@ def create_theme(data: ThemeCreate,
     theme_id = theme.id
 
     if data.is_test:
-        for i in range(data.question_numbers):
-            test_question = TestQuestion(text=f"Test Question #{i}",
+        client = OpenAI(api_key=user.ai_token.token)
+        questions_dict = create_test_questions(client, data.name, data.question_numbers)
+
+        for question in questions_dict["questions"]:
+            test_question = TestQuestion(text=question["question"],
                                          theme_id=theme_id)
             session.add(test_question)
             session.flush()
             session.refresh(test_question)
             test_question_id = test_question.id
-            for j in range(4):
-                if j == 2:
-                    test_option = TestOptions(text=f"Option #{i}",
+            for option in question["options"]:
+                test_option = TestOptions(text=option["option"],
                                           test_question_id=test_question_id,
-                                          is_correct=True)
-                else:
-                    test_option = TestOptions(text=f"Option #{j}",
-                                          test_question_id=test_question_id,
-                                          is_correct=False)
+                                          is_correct=option["is_correct"])
                 session.add(test_option)
                 session.flush()
                 session.refresh(test_option)
     session.commit()
     return {
-        "message": "Successfull"
+        "theme_id": theme.id
     }
 
 @router.get("/{theme_id}", response_model=ThemeReturn)
@@ -83,3 +83,8 @@ def get_theme(theme_id: int, session: SessionDep, user: CurrentUserDep):
         name=theme.name,
         questions=questions
     )
+
+@router.get("/class/{class_id}")
+def questions_of_class(class_id: int, session: SessionDep):
+    class_obj = session.get(Class, class_id)
+    return class_obj.themes

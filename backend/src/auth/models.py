@@ -16,4 +16,4 @@ class User(Base):
     role = Column(Enum(RoleEnum), nullable=False) # student/teacher
     
     classes = relationship("Class", back_populates="owner")
-    
+    ai_token = relationship("UserToken", back_populates="user", uselist=False)
