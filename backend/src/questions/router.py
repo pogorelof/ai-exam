@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException
 from openai import OpenAI
 from sqlalchemy import select
 
-from src.ai.service import create_test_questions
+from src.ai.service import client_, create_test_questions
 from src.classes.models import Class, members_of_class
 from src.questions.models import TestOptions, TestQuestion, Theme
 from src.auth.schemas import RoleEnum
@@ -35,7 +35,8 @@ def create_theme(data: ThemeCreate,
     theme_id = theme.id
 
     if data.is_test:
-        client = OpenAI(api_key=user.ai_token.token)
+        # client = OpenAI(api_key=user.ai_token.token)
+        client = client_(user.ai_token.token)
         questions_dict = create_test_questions(client, data.name, data.question_numbers)
 
         for question in questions_dict["questions"]:
